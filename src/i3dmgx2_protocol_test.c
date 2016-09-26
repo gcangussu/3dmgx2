@@ -216,7 +216,7 @@ int main(void) {
     test_update_matrix();
     test_write_acc_bias();
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 
