@@ -26,7 +26,7 @@
 #define CMD_WRITE_GYRO_BIAS      {0xCA}
 #define CMD_ACC_ANGR_MAGV        {0xCB}
 #define CMD_ACC_ANGR_MAGV_ORIENT {0xCC}
-#define CMD_CAPTURE_GYRO_BIAS    {0xCD}
+#define CMD_CAPTURE_GYRO_BIAS(time) {0xCD, 0xC1, 0x29, time >> 8, time & 0xFF}
 #define CMD_EULER_ANGLES         {0xCE}
 #define CMD_EULER_ANGLES_ANGR    {0xCF}
 #define CMD_TRANSFER_NONV_MEM    {0xD0}
@@ -138,6 +138,132 @@ struct acc_bias_resp {
 
 int parse_acc_bias_resp(uint8_t *resp, unsigned resp_len,
         struct acc_bias_resp *record);
+
+
+/* Write Gyro Bias Correction */
+struct gyro_bias_resp {
+    float gyrobias[3];
+    uint_fast32_t timer;
+};
+
+int parse_gyro_bias_resp(uint8_t *resp, unsigned resp_len,
+        struct gyro_bias_resp *record);
+
+
+/* Acceleration, Angular Rate & Magnetometer Vector */
+struct acc_angr_magv {
+    float acc[3];
+    float angr[3];
+    float mag[3];
+    uint_fast32_t timer;
+};
+
+
+int parse_acc_angr_magv(uint8_t *resp, unsigned resp_len,
+        struct acc_angr_magv *record);
+
+
+/* Acceleration, Angular Rate, Magnetometer Vectors & Orientation Matrix */
+struct acc_angr_magv_orient {
+    float acc[3];
+    float angr[3];
+    float mag[3];
+    float matrix[3][3];
+    uint_fast32_t timer;
+};
+
+int parse_acc_angr_magv_orient(uint8_t *resp, unsigned resp_len,
+        struct acc_angr_magv_orient *record);
+
+
+/* Capture Gyro Bias */
+struct capture_gyro_bias {
+    float gyrobias[3];
+    uint_fast32_t timer;
+};
+
+int parse_capture_gyro_bias(uint8_t *resp, unsigned resp_len,
+        struct capture_gyro_bias *record);
+
+
+/* Euler Angles */
+struct euler_angles_resp {
+    float roll;
+    float pitch;
+    float yaw;
+    uint_fast32_t timer;
+};
+
+int parse_euler_angles_resp(uint8_t *resp, unsigned resp_len,
+        struct euler_angles_resp *record);
+
+
+/* Euler Angles and Angular Rates */
+struct euler_angles_angr {
+    float roll;
+    float pitch;
+    float yaw;
+    float angr[3];
+    uint_fast32_t timer;
+};
+
+int parse_euler_angles_angr(uint8_t *resp, unsigned resp_len,
+        struct euler_angles_angr *record);
+
+
+/* Transfer Quantity to Non-Volatile Memory */
+struct transfer_nonv_mem {
+    uint_fast32_t timer;
+    uint_fast16_t trans_qty;
+};
+
+int parse_transfer_nonv_mem(uint8_t *resp, unsigned resp_len,
+        struct transfer_nonv_mem *record);
+
+
+/* Temperatures */
+struct i3dmgx2_temperatures {
+    uint_fast16_t temp_acc;
+    uint_fast16_t temp_gyro[3];
+    uint_fast32_t timer;
+};
+
+int parse_i3dmgx2_temperatures(uint8_t *resp, unsigned resp_len,
+        struct i3dmgx2_temperatures *record);
+
+
+/* Gyro Stabilized Acceleration, Angular Rate & Magnetometer Vector */
+struct gyrosa_angr_magv {
+    float stabacc[3];
+    float angr[3];
+    float stabmag[3];
+    uint_fast32_t timer;
+};
+
+int parse_gyrosa_angr_magv(uint8_t *resp, unsigned resp_len,
+        struct gyrosa_angr_magv *record);
+
+
+/* DeltaAngle, DeltaVelocity & Magnetometer Vectors */
+struct delta_ang_vel_magv {
+    float ang[3];
+    float vel[3];
+    float mag[3];
+    uint_fast32_t timer;
+};
+
+int parse_delta_ang_vel_magv(uint8_t *resp, unsigned resp_len,
+        struct delta_ang_vel_magv *record);
+
+
+
+
+
+
+
+
+
+
 
 
 
