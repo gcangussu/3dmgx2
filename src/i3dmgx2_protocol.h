@@ -12,36 +12,86 @@
 #include <stdint.h>
 
 
-/* Commands to Bytes Mapping */
-#define CMD_WIRELESS_PING(addr)  {0x02, addr >> 8, addr & 0xFF}
-#define CMD_RAW_ACC_ANGR         {0xC1}
-#define CMD_ACC_ANGR             {0xC2}
-#define CMD_DELTA_ANG_VEL        {0xC3}
-#define CMD_SET_CONTINUOUS(cmd)  {0xC4, 0xC1, 0x29, (cmd)}
-#define CMD_ORIENT               {0xC5}
-#define CMD_ORIENT_UP            {0xC6}
-#define CMD_MAGV                 {0xC7}
-#define CMD_ACC_ANGR_ORIENT      {0xC8}
-#define CMD_WRITE_ACC_BIAS       {0xC9, 0xB7, 0x44} // TODO
-#define CMD_WRITE_GYRO_BIAS      {0xCA}
-#define CMD_ACC_ANGR_MAGV        {0xCB}
-#define CMD_ACC_ANGR_MAGV_ORIENT {0xCC}
-#define CMD_CAPTURE_GYRO_BIAS(time) {0xCD, 0xC1, 0x29, time >> 8, time & 0xFF}
-#define CMD_EULER_ANGLES         {0xCE}
-#define CMD_EULER_ANGLES_ANGR    {0xCF}
-#define CMD_TRANSFER_NONV_MEM    {0xD0}
-#define CMD_TEMPERATURES         {0xD1}
-#define CMD_GYROSA_ANGR_MAGV     {0xD2}
-#define CMD_DELTA_ANG_VEL_MAGV   {0xD3}
-#define CMD_WRITE_WORD_EEPROM    {0xE4}
-#define CMD_READ_WORD_EEPROM     {0xE5}
-#define CMD_FIRWARE_VERSION      {0xE9}
-#define CMD_GET_DEVICE_ID        {0xEA}
-#define CMD_STOP_CONTINIOUS      {0xFA}
-#define CMD_BUILT_IN_TEST        {0xFB}
+/* Commands */
+#define CMD_WIRELESS_PING        0x02
+#define CMD_RAW_ACC_ANGR         0xC1
+#define CMD_ACC_ANGR             0xC2
+#define CMD_DELTA_ANG_VEL        0xC3
+#define CMD_SET_CONTINUOUS       0xC4
+#define CMD_ORIENT               0xC5
+#define CMD_ORIENT_UP            0xC6
+#define CMD_MAGV                 0xC7
+#define CMD_ACC_ANGR_ORIENT      0xC8
+#define CMD_WRITE_ACC_BIAS       0xC9
+#define CMD_WRITE_GYRO_BIAS      0xCA
+#define CMD_ACC_ANGR_MAGV        0xCB
+#define CMD_ACC_ANGR_MAGV_ORIENT 0xCC
+#define CMD_CAPTURE_GYRO_BIAS    0xCD
+#define CMD_EULER_ANGLES         0xCE
+#define CMD_EULER_ANGLES_ANGR    0xCF
+#define CMD_TRANSFER_NONV_MEM    0xD0
+#define CMD_TEMPERATURES         0xD1
+#define CMD_GYROSA_ANGR_MAGV     0xD2
+#define CMD_DELTA_ANG_VEL_MAGV   0xD3
+#define CMD_WRITE_WORD_EEPROM    0xE4
+#define CMD_READ_WORD_EEPROM     0xE5
+#define CMD_FIRWARE_VERSION      0xE9
+#define CMD_GET_DEVICE_ID        0xEA
+#define CMD_STOP_CONTINUOUS      0xFA
+#define CMD_BUILT_IN_TEST        0xFB
+
+
+/* Commands' total sizes in bytes */
+#define SIZE_WIRELESS_PING        3
+#define SIZE_RAW_ACC_ANGR         1
+#define SIZE_ACC_ANGR             1
+#define SIZE_DELTA_ANG_VEL        1
+#define SIZE_SET_CONTINUOUS       4
+#define SIZE_ORIENT               1
+#define SIZE_ORIENT_UP            1
+#define SIZE_MAGV                 1
+#define SIZE_ACC_ANGR_ORIENT      1
+#define SIZE_WRITE_ACC_BIAS       15
+#define SIZE_WRITE_GYRO_BIAS      15
+#define SIZE_ACC_ANGR_MAGV        1
+#define SIZE_ACC_ANGR_MAGV_ORIENT 1
+#define SIZE_CAPTURE_GYRO_BIAS    5
+#define SIZE_EULER_ANGLES         1
+#define SIZE_EULER_ANGLES_ANGR    1
+#define SIZE_TRANSFER_NONV_MEM    5
+#define SIZE_TEMPERATURES         1
+#define SIZE_GYROSA_ANGR_MAGV     1
+#define SIZE_DELTA_ANG_VEL_MAGV   1
+#define SIZE_WRITE_WORD_EEPROM    8
+#define SIZE_READ_WORD_EEPROM     4
+#define SIZE_FIRWARE_VERSION      1
+#define SIZE_GET_DEVICE_ID        2
+#define SIZE_STOP_CONTINUOUS      1
+#define SIZE_BUILT_IN_TEST        4
+
+
+/* Constant commands */
+extern const uint8_t cmd_raw_acc_angr[SIZE_RAW_ACC_ANGR];
+extern const uint8_t cmd_acc_angr[SIZE_ACC_ANGR];
+extern const uint8_t cmd_delta_ang_vel[SIZE_DELTA_ANG_VEL];
+extern const uint8_t cmd_orient[SIZE_ORIENT];
+extern const uint8_t cmd_orient_up[SIZE_ORIENT_UP];
+extern const uint8_t cmd_magv[SIZE_MAGV];
+extern const uint8_t cmd_acc_angr_orient[SIZE_ACC_ANGR_ORIENT];
+extern const uint8_t cmd_acc_angr_magv[SIZE_ACC_ANGR_MAGV];
+extern const uint8_t cmd_acc_angr_magv_orient[SIZE_ACC_ANGR_MAGV_ORIENT];
+extern const uint8_t cmd_euler_angles[SIZE_EULER_ANGLES];
+extern const uint8_t cmd_euler_angles_angr[SIZE_EULER_ANGLES_ANGR];
+extern const uint8_t cmd_temperatures[SIZE_TEMPERATURES];
+extern const uint8_t cmd_gyrosa_angr_magv[SIZE_GYROSA_ANGR_MAGV];
+extern const uint8_t cmd_delta_ang_vel_magv[SIZE_DELTA_ANG_VEL_MAGV];
+extern const uint8_t cmd_firware_version[SIZE_FIRWARE_VERSION];
+extern const uint8_t cmd_stop_continuous[SIZE_STOP_CONTINUOUS];
 
 
 /* Wireless Ping */
+void init_wireless_ping(uint8_t buffer[SIZE_WIRELESS_PING], uint16_t addr);
+
 int parse_wireless_ping(uint8_t *resp, unsigned resp_len, int *status);
 
 
@@ -79,6 +129,9 @@ int parse_delta_ang_vel(uint8_t *resp, unsigned resp_len,
 
 
 /* Set Continuous Mode */
+void init_set_continuous_mode(uint8_t buffer[SIZE_SET_CONTINUOUS],
+        uint8_t cmd_byte);
+
 struct set_continuous_resp {
     uint_fast32_t timer;
     uint_fast8_t cmd_byte;
@@ -131,6 +184,9 @@ int parse_acc_angr_orient(uint8_t *resp, unsigned resp_len,
 
 
 /* Write Accelerometer Bias Correction */
+void init_write_acc_bias(uint8_t buffer[SIZE_WRITE_ACC_BIAS],
+        float accbias[3]);
+
 struct acc_bias_resp {
     float accbias[3];
     uint_fast32_t timer;
@@ -141,6 +197,9 @@ int parse_acc_bias_resp(uint8_t *resp, unsigned resp_len,
 
 
 /* Write Gyro Bias Correction */
+void init_write_gyro_bias(uint8_t buffer[SIZE_WRITE_GYRO_BIAS],
+        float gyrobias[3]);
+
 struct gyro_bias_resp {
     float gyrobias[3];
     uint_fast32_t timer;
@@ -177,6 +236,9 @@ int parse_acc_angr_magv_orient(uint8_t *resp, unsigned resp_len,
 
 
 /* Capture Gyro Bias */
+void init_capture_gyro_bias(uint8_t buffer[SIZE_CAPTURE_GYRO_BIAS],
+        uint16_t sampling_time);
+
 struct capture_gyro_bias {
     float gyrobias[3];
     uint_fast32_t timer;
@@ -212,6 +274,9 @@ int parse_euler_angles_angr(uint8_t *resp, unsigned resp_len,
 
 
 /* Transfer Quantity to Non-Volatile Memory */
+void init_transfer_nonv_mem(uint8_t buffer[SIZE_TRANSFER_NONV_MEM],
+        uint16_t transf_qty);
+
 struct transfer_nonv_mem {
     uint_fast32_t timer;
     uint_fast16_t trans_qty;
@@ -256,22 +321,64 @@ int parse_delta_ang_vel_magv(uint8_t *resp, unsigned resp_len,
         struct delta_ang_vel_magv *record);
 
 
+/* Write Word to EEPROM */
+void init_write_word_eeprom(uint8_t buffer[SIZE_WRITE_WORD_EEPROM],
+        uint16_t addr, uint16_t word);
+
+int parse_write_word_resp(uint8_t *resp, unsigned resp_len,
+        uint_fast16_t *word);
 
 
+/* Read Word from EEPROM */
+void init_read_word_eeprom(uint8_t buffer[SIZE_READ_WORD_EEPROM],
+        uint16_t addr);
+
+int parse_read_word_resp(uint8_t *resp, unsigned resp_len,
+        uint_fast16_t *word);
 
 
+/* Read Firmware Version Number */
+int parse_firmware_version(uint8_t *resp, unsigned resp_len,
+        uint_fast32_t *dword);
 
 
+/* Read Device Identifier String */
+void init_get_device_id(uint8_t buffer[SIZE_GET_DEVICE_ID],
+        uint8_t selector);
+
+struct i3dmgx2_device_id {
+    char str[17];  /* 16 + 1 bytes for the null termination */
+    uint_fast8_t selector;
+};
+
+int parse_device_id_string(uint8_t *resp, unsigned resp_len,
+        struct i3dmgx2_device_id *record);
 
 
+/* Built-in Test */
+void init_built_in_test(uint8_t buffer[SIZE_BUILT_IN_TEST],
+        uint8_t config);
+
+int parse_built_in_test_resp(uint8_t *resp, unsigned resp_len,
+        uint8_t *config);
 
 
+/*
+ * Initialize a packet after the command inside was initialized.
+ */
+void i3dmgx2_init_pack(uint8_t *cmd_pack, uint16_t addr, unsigned cmd_len);
 
 
+/*
+ * Get node address of packet.
+ */
+unsigned i3dmgx2_get_node_addr(uint8_t *pack);
 
 
-
-
+/*
+ * Get the command/reply length disregarding the extra unused byte.
+ */
+unsigned i3dmgx2_get_length(uint8_t *pack);
 
 
 #endif /* I3DMGX2_PROTOCOL_H_ */

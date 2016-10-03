@@ -22,13 +22,29 @@
 
 
 void test_wireless_ping() {
-    uint8_t ping_cmd[] = CMD_WIRELESS_PING(0x00FF);
+    uint8_t ping_cmd[SIZE_WIRELESS_PING];
+    init_wireless_ping(ping_cmd, 0x00FF);
     assert(sizeof(ping_cmd) == 3);
     assert(ping_cmd[0] == 0x02);
     assert(ping_cmd[1] == 0x00);
     assert(ping_cmd[2] == 0xFF);
 
-    uint8_t ping_cmd2[] = CMD_WIRELESS_PING(0xFF00);
+    uint8_t pack_ping[SIZE_WIRELESS_PING + 9];
+    init_wireless_ping(pack_ping + 7, 0x00FF);
+    i3dmgx2_init_pack(pack_ping, 0xF0A2, SIZE_WIRELESS_PING);
+    assert(pack_ping[0] == 0xAA);
+    assert(pack_ping[1] == 0x0B);
+    assert(pack_ping[2] == 0x00);
+    assert(pack_ping[3] == 0xF0);
+    assert(pack_ping[4] == 0xA2);
+    assert(pack_ping[5] == SIZE_WIRELESS_PING + 1);
+    assert(pack_ping[6] == 0x00);
+    assert(pack_ping[7] == 0x02);
+    assert(pack_ping[8] == 0x00);
+    assert(pack_ping[9] == 0xFF);
+
+    uint8_t ping_cmd2[SIZE_WIRELESS_PING];
+    init_wireless_ping(ping_cmd2, 0xFF00);
     assert(ping_cmd2[1] == 0xFF);
     assert(ping_cmd2[2] == 0x00);
 
@@ -52,6 +68,9 @@ void test_wireless_ping() {
 
 
 void test_raw_acc_angr() {
+    assert(cmd_raw_acc_angr[0] == CMD_RAW_ACC_ANGR);
+    assert(sizeof(cmd_raw_acc_angr) == 1);
+
     uint8_t resp[31];
     resp[0] = 0xC1;
 
@@ -71,7 +90,7 @@ void test_raw_acc_angr() {
     *((uint16_t*)(resp + 29)) = htons(sum & 0xFFFF);
 
     struct raw_acc_angr record;
-    int result = parse_raw_acc_angr(resp, sizeof(resp), &record);
+    int result = parse_raw_acc_angr(resp, sizeof(resp) - 2, &record);
     assert(result == 0);
 
     for (int i = 0; i < 3; ++i) {
@@ -103,7 +122,7 @@ void test_raw_acc() {
     *((uint16_t*)(resp + 29)) = htons(sum & 0xFFFF);
 
     struct acc_angr record;
-    int result = parse_acc_angr(resp, sizeof(resp), &record);
+    int result = parse_acc_angr(resp, sizeof(resp) - 2, &record);
     assert(result == 0);
 
     for (int i = 0; i < 3; ++i) {
@@ -135,7 +154,7 @@ void test_delta_ang_vel() {
     *((uint16_t*)(resp + 29)) = htons(sum & 0xFFFF);
 
     struct delta_ang_vel record;
-    int result = parse_delta_ang_vel(resp, sizeof(resp), &record);
+    int result = parse_delta_ang_vel(resp, sizeof(resp) - 2, &record);
     assert(result == 0);
 
     for (int i = 0; i < 3; ++i) {
@@ -148,7 +167,8 @@ void test_delta_ang_vel() {
 
 
 void test_continuous_mode() {
-    uint8_t cmd[] = CMD_SET_CONTINUOUS(0xFB);
+    uint8_t cmd[SIZE_SET_CONTINUOUS];
+    init_set_continuous_mode(cmd, 0xFB);
     assert(cmd[0] == 0xC4);
     assert(cmd[1] == 0xC1);
     assert(cmd[2] == 0x29);
@@ -157,10 +177,11 @@ void test_continuous_mode() {
     uint8_t resp[8] = {0xC4, 0xFB};
     uint32_t timer = 0xFFFFFF00;
     DEREFER_32BITS(resp + 2) = htonl(timer);
-    DEREFER_16BITS(resp + 6) = htons(i3dmgx2_calc_chksum(resp, sizeof(resp)));
+    DEREFER_16BITS(resp + 6) = htons(
+            i3dmgx2_resp_chksum(resp, sizeof(resp)));
 
     struct set_continuous_resp record;
-    int result = parse_set_continuous(resp, sizeof(resp), &record);
+    int result = parse_set_continuous(resp, sizeof(resp) - 2, &record);
     assert(result == 0);
 
     assert(record.cmd_byte == 0xFB);
@@ -183,10 +204,11 @@ void test_orient_matrix() {
 
     uint32_t timer = 0xABCD0123;
     DEREFER_32BITS(resp + 37) = htonl(timer);
-    DEREFER_16BITS(resp + 41) = htons(i3dmgx2_calc_chksum(resp, sizeof(resp)));
+    DEREFER_16BITS(resp + 41) = htons(
+            i3dmgx2_resp_chksum(resp, sizeof(resp)));
 
     struct orient_matrix record;
-    int result = parse_orient_matrix(resp, sizeof(resp), &record);
+    int result = parse_orient_matrix(resp, sizeof(resp) - 2, &record);
     assert(result == 0);
 
     for (int i = 0; i < 9; ++i) {
@@ -196,13 +218,33 @@ void test_orient_matrix() {
 }
 
 
-void test_update_matrix() {
-    /* TODO */
+void test_write_acc_bias() {
+    uint8_t cmd[SIZE_WRITE_ACC_BIAS];
+    float x = 23.4f;
+    float y = 0.02f;
+    float z = x * y;
+    float accbias[3] = {x, y, z};
+    init_write_acc_bias(cmd, accbias);
+
+    float values[3];
+    i3dmgx2_parse_floats(values, cmd + 3, 3);
+    assert(values[0] == x);
+    assert(values[1] == y);
+    assert(values[2] == z);
 }
 
 
-void test_write_acc_bias() {
-//    uint8_t cmd[] = CMD_WRITE_ACC_BIAS()
+void test_write_word_eeprom() {
+    uint8_t cmd[SIZE_WRITE_WORD_EEPROM];
+    init_write_word_eeprom(cmd, 0xF812, 0x0AA0);
+    assert(cmd[0] == CMD_WRITE_WORD_EEPROM);
+    assert(cmd[1] == 0xC1);
+    assert(cmd[2] == 0x29);
+    assert(cmd[3] == 0x00);
+    assert(cmd[4] == 0xF8);
+    assert(cmd[5] == 0x12);
+    assert(cmd[6] == 0x0A);
+    assert(cmd[7] == 0xA0);
 }
 
 
@@ -213,29 +255,7 @@ int main(void) {
     test_delta_ang_vel();
     test_continuous_mode();
     test_orient_matrix();
-    test_update_matrix();
     test_write_acc_bias();
-
+    test_write_word_eeprom();
     return EXIT_SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
