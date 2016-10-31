@@ -319,7 +319,7 @@ int parse_acc_angr_magv_orient(uint8_t *resp, unsigned resp_len,
     i3dmgx2_parse_floats(record->acc, resp + 1, 3);
     i3dmgx2_parse_floats(record->angr, resp + 13, 3);
     i3dmgx2_parse_floats(record->mag, resp + 25, 3);
-    i3dmgx2_parse_floats((float*) record->matrix, resp + 37, 3);
+    i3dmgx2_parse_floats((float*) record->matrix, resp + 37, 9);
     record->timer = BYTEARRAY_TO_HL(resp + 73);
 
     return 0;
@@ -496,7 +496,7 @@ int parse_built_in_test_resp(uint8_t *resp, unsigned resp_len,
 }
 
 
-void i3dmgx2_init_pack(uint8_t *cmd_pack, uint16_t addr, unsigned cmd_len) {
+void i3dmgx2_init_cmdp(uint8_t *cmd_pack, uint16_t addr, unsigned cmd_len) {
     cmd_pack[0] = 0xAA;  /* Start of Packet */
     cmd_pack[1] = 0x0B;
     cmd_pack[2] = 0x00;
@@ -514,13 +514,14 @@ unsigned i3dmgx2_get_node_addr(uint8_t *pack) {
 }
 
 
-unsigned i3dmgx2_get_length(uint8_t *pack) {
+unsigned i3dmgx2_get_data_length(uint8_t *pack) {
     const unsigned raw_len = pack[5];
     if (raw_len == 0) return 0;
     return raw_len - 1;
 }
 
 
+const uint8_t i3dmgx2_data_start[3] = {0xAA, 0x07, 0x00};
 
 
 

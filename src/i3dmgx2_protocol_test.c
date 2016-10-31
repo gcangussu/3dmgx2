@@ -29,9 +29,9 @@ void test_wireless_ping() {
     assert(ping_cmd[1] == 0x00);
     assert(ping_cmd[2] == 0xFF);
 
-    uint8_t pack_ping[SIZE_WIRELESS_PING + 9];
-    init_wireless_ping(pack_ping + 7, 0x00FF);
-    i3dmgx2_init_pack(pack_ping, 0xF0A2, SIZE_WIRELESS_PING);
+    uint8_t pack_ping[I3DMGX2_CMDP_SIZE(SIZE_WIRELESS_PING)];
+    init_wireless_ping(I3DMGX2_PAYLOAD_PTR(pack_ping), 0x00FF);
+    i3dmgx2_init_cmdp(pack_ping, 0xF0A2, SIZE_WIRELESS_PING);
     assert(pack_ping[0] == 0xAA);
     assert(pack_ping[1] == 0x0B);
     assert(pack_ping[2] == 0x00);
@@ -248,7 +248,7 @@ void test_write_word_eeprom() {
 }
 
 
-int main(void) {
+int __main(void) {
     test_wireless_ping();
     test_raw_acc_angr();
     test_raw_acc();

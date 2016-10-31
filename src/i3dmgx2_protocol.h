@@ -11,6 +11,30 @@
 
 #include <stdint.h>
 
+#include "i3dmgx2_utils.h"
+
+
+/* Macros for handling packages */
+#define I3DMGX2_ADDR_INDEX 3
+#define I3DMGX2_ADDR(pack) BYTEARRAY_TO_HS((pack) + I3DMGX2_ADDR_INDEX)
+
+#define I3DMGX2_PAYLOAD_INDEX 7
+#define I3DMGX2_PAYLOAD_PTR(pack) ((pack) + I3DMGX2_PAYLOAD_INDEX)
+#define I3DMGX2_PAYLOAD_LEN(pack) ((unsigned)(pack)[I3DMGX2_LEN_INDEX] - 1)
+#define I3DMGX2_CMD(pack) ((pack)[I3DMGX2_PAYLOAD_INDEX])
+
+#define I3DMGX2_LEN_INDEX 5
+
+#define I3DMGX2_CMDP_OVERHEAD 8
+#define I3DMGX2_CMDP_LEN(pack) ((pack)[[I3DMGX2_LEN_INDEX] \
+                                 + I3DMGX2_CMDP_OVERHEAD)
+#define I3DMGX2_CMDP_MINSIZE 10
+#define I3DMGX2_CMDP_SIZE(cmd_size) ((cmd_size) + I3DMGX2_CMDP_OVERHEAD + 1)
+
+#define I3DMGX2_DATAP_OVERHEAD 10
+#define I3DMGX2_DATAP_LEN(pack) ((pack)[I3DMGX2_LEN_INDEX] \
+                                 + I3DMGX2_DATAP_OVERHEAD)
+#define I3DMGX2_DATAP_MINSIZE 13
 
 /* Commands */
 #define CMD_WIRELESS_PING        0x02
@@ -364,21 +388,15 @@ int parse_built_in_test_resp(uint8_t *resp, unsigned resp_len,
 
 
 /*
- * Initialize a packet after the command inside was initialized.
+ * Initialize a command packet.
  */
-void i3dmgx2_init_pack(uint8_t *cmd_pack, uint16_t addr, unsigned cmd_len);
+void i3dmgx2_init_cmdp(uint8_t *cmd_pack, uint16_t addr, unsigned cmd_len);
 
 
 /*
- * Get node address of packet.
+ * Array with the fixed beginning of a packet.
  */
-unsigned i3dmgx2_get_node_addr(uint8_t *pack);
-
-
-/*
- * Get the command/reply length disregarding the extra unused byte.
- */
-unsigned i3dmgx2_get_length(uint8_t *pack);
+extern const uint8_t i3dmgx2_data_start[3];
 
 
 #endif /* I3DMGX2_PROTOCOL_H_ */
