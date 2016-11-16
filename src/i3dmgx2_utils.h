@@ -8,6 +8,10 @@
 #ifndef I3DMGX2_UTILS_H_
 #define I3DMGX2_UTILS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <arpa/inet.h>
 
@@ -64,5 +68,9 @@ void i3dmgx2_parse_floats(float *values, uint8_t *buffer, unsigned num);
  */
 void i3dmgx2_floats_to_net_bytes(uint8_t *buffer, float *values,
         unsigned num);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* I3DMGX2_UTILS_H_ */

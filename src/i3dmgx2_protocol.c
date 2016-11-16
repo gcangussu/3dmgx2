@@ -5,6 +5,10 @@
  *      Author: gabriel
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "i3dmgx2_protocol.h"
 #include "i3dmgx2_errors.h"
 #include "i3dmgx2_utils.h"
@@ -523,7 +527,9 @@ unsigned i3dmgx2_get_data_length(uint8_t *pack) {
 
 const uint8_t i3dmgx2_data_start[3] = {0xAA, 0x07, 0x00};
 
-
+#ifdef __cplusplus
+}
+#endif
 
 
 

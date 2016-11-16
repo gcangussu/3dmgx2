@@ -23,7 +23,7 @@
 #define UNIT_ADDR 95
 
 
-int _main() {
+int main() {
     int stdin;
     int fd;
     int max_fd;

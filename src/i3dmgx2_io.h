@@ -8,6 +8,10 @@
 #ifndef I3DMGX2_IO_H_
 #define I3DMGX2_IO_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -17,7 +21,7 @@
  *
  * Returns the file descriptor on success or -1 on error.
  */
-int i3dmgx2_open_port(char *port);
+int i3dmgx2_open_port(const char *port);
 
 
 /*
@@ -35,5 +39,8 @@ int i3dmgx2_open_port(char *port);
 int i3dmgx2_parse_buffer(const uint8_t *buf, size_t buf_size,
                          uint8_t **data_pack, size_t *data_pack_size);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* I3DMGX2_IO_H_ */

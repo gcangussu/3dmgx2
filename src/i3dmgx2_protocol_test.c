@@ -248,7 +248,7 @@ void test_write_word_eeprom() {
 }
 
 
-int __main(void) {
+int main(void) {
     test_wireless_ping();
     test_raw_acc_angr();
     test_raw_acc();
@@ -257,5 +257,5 @@ int __main(void) {
     test_orient_matrix();
     test_write_acc_bias();
     test_write_word_eeprom();
-    return EXIT_SUCCESS;
+    return 0;
 }

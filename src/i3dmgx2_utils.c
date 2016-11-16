@@ -5,6 +5,10 @@
  *      Author: gabriel
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "i3dmgx2_utils.h"
 #include "i3dmgx2_errors.h"
 
@@ -78,3 +82,7 @@ void i3dmgx2_floats_to_net_bytes(uint8_t *buffer, float *values,
         u32_buffer[i] = htonl(u32_values[i]);
     }
 }
+
+#ifdef __cplusplus
+}
+#endif

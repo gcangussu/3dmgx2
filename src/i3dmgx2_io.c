@@ -5,6 +5,10 @@
  *      Author: gabriel
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define _GNU_SOURCE
 #include <string.h>
 
@@ -18,7 +22,7 @@
 #include "i3dmgx2_io.h"
 
 
-int i3dmgx2_open_port(char *port) {
+int i3dmgx2_open_port(const char *port) {
     int fd;
     struct termios options;
 
@@ -48,9 +52,9 @@ int i3dmgx2_open_port(char *port) {
     options.c_lflag &= (unsigned) ~(ICANON | ECHO | ECHOE | ISIG);
     options.c_oflag &= (unsigned) ~OPOST;
 
-    /* Set timeout to 1 second */
+    /* Set timeout to 2 second */
     options.c_cc[VMIN]  = 0;
-    options.c_cc[VTIME] = 10;
+    options.c_cc[VTIME] = 20;
 
     /* Set the new options for the port. */
     tcsetattr(fd, TCSANOW, &options);
@@ -84,8 +88,9 @@ int i3dmgx2_parse_buffer(const uint8_t *buf, size_t buf_size,
     return 1;  /* Partial data pack on buffer */
 }
 
-
-
+#ifdef __cplusplus
+}
+#endif
 
 
 

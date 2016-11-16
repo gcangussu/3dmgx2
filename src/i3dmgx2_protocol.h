@@ -5,9 +5,12 @@
  *      Author: gabriel
  */
 
-
 #ifndef I3DMGX2_PROTOCOL_H_
 #define I3DMGX2_PROTOCOL_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -398,5 +401,8 @@ void i3dmgx2_init_cmdp(uint8_t *cmd_pack, uint16_t addr, unsigned cmd_len);
  */
 extern const uint8_t i3dmgx2_data_start[3];
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* I3DMGX2_PROTOCOL_H_ */
