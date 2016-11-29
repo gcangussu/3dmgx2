@@ -28,9 +28,10 @@ int i3dmgx2_open_port(const char *port) {
 
     fd = open(port, O_RDWR | O_NOCTTY | O_NDELAY);
     if (fd == -1) {
-        perror("Unable to open port");
+        return -1;
     }
-    else fcntl(fd, F_SETFL, 0);
+
+    fcntl(fd, F_SETFL, 0);
 
     /* Get the current options for the port. */
     tcgetattr(fd, &options);
