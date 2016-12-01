@@ -22,6 +22,30 @@
 
 
 /*
+ * Print acc_angr_magv_orient record on stdout
+ */
+void print_rec(acc_angr_magv_orient *record) {
+    printf("\n%f;", record->acc[0]);
+    printf("%f;", record->acc[1]);
+    printf("%f;", record->acc[2]);
+    printf("%f;", record->angr[0]);
+    printf("%f;", record->angr[1]);
+    printf("%f;", record->angr[2]);
+    printf("%f;", record->mag[0]);
+    printf("%f;", record->mag[1]);
+    printf("%f;", record->mag[2]);
+
+    const float *M = (float*) record->matrix;
+    printf("%f;%f;%f;"
+           "%f;%f;%f;"
+           "%f;%f;%f;\n",
+           M[0], M[1], M[2],
+           M[3], M[4], M[5],
+           M[6], M[7], M[8]);
+}
+
+
+/*
  * Convert a rotation matrix to a quaternion.
  * Based on "Converting a Rotation Matrix to a Quaternion" by Mike Day.
  * (https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf)
@@ -110,8 +134,9 @@ int main(int argc, char **argv) {
     // Initialize ROS variables.
     ros::init(argc, argv, "i3dmgx2");
     ros::NodeHandle node;
-    ros::Publisher publisher = node.advertise<sensor_msgs::Imu>("imu/data",
-                                                                1000);
+    ros::Publisher publisher = node.advertise<sensor_msgs::Imu>(
+            "imu/data_raw",
+            1000);
 
     // Open serial port to 3DM-GX2 base station.
     int fd = i3dmgx2_open_port("/dev/ttyUSB0");  // TODO: put argument for port
@@ -127,6 +152,12 @@ int main(int argc, char **argv) {
     init_set_continuous_mode(I3DMGX2_PAYLOAD_PTR(sc_pack),
                              CMD_ACC_ANGR_MAGV_ORIENT);
     i3dmgx2_init_cmdp(sc_pack, 95, SIZE_SET_CONTINUOUS);  // TODO: change 95 to argument
+
+//    // Send pack to configure data output rate
+//    const unsigned sc_size = I3DMGX2_CMDP_SIZE(SIZE_WRITE_WORD_EEPROM);
+//    uint8_t sc_pack[sc_size];
+//    init_write_word_eeprom(I3DMGX2_PAYLOAD_PTR(sc_pack), 0xFCA2, 4267);
+//    i3dmgx2_init_cmdp(sc_pack, 95, SIZE_WRITE_WORD_EEPROM);
 
     ssize_t nbytes = write(fd, sc_pack, sc_size);
     if (nbytes < 0) {
@@ -148,14 +179,13 @@ int main(int argc, char **argv) {
     int parse_result;
     acc_angr_magv_orient record;
 
-    while (true) {
+//    unsigned i = 0;
+
+    while (ros::ok()) {
+//        ++i;
+
         // Read from serial port.
         nbytes = read(fd, bufend, sizeof(buf) - (bufend - buf));
-
-        // Check if should stop running the process.
-        if (!ros::ok()) {
-            break;
-        }
 
         // In case of error.
         if (nbytes < 0) {
@@ -173,6 +203,10 @@ int main(int argc, char **argv) {
         // Move bufend by nbytes (read from serial port).
         bufend += nbytes;
 
+//        if (i % 100 == 0) {
+//            ROS_INFO("Left space in buffer: %lu", sizeof(buf) - (bufend - buf));
+//        }
+
         // Parse buffer searching for received packs.
         while (true) {
             parse_result = i3dmgx2_parse_buffer(parseptr,
@@ -182,17 +216,19 @@ int main(int argc, char **argv) {
 
             // In case of pack not found.
             if (parse_result != 0) {
-                const size_t desloc = parseptr - buf;
-                const size_t buf_left = sizeof(buf) - desloc;
-
-                // Clear unused buffer if space left is smaller than 100 bytes.
-                if (buf_left < 100) {
-                    memcpy(buf, parseptr, bufend - parseptr);
-                    bufend = bufend - desloc;
-                    parseptr = buf;
-                }
+//                const size_t desloc = parseptr - buf;
+//                const size_t buf_left = sizeof(buf) - desloc;
+//
+//                // Clear unused buffer if space left is smaller than 100 bytes.
+//                if (buf_left < 100) {
+//                    ROS_INFO("Buffer got almost full. Clearing unused buffer.");
+//                    memcpy(buf, parseptr, bufend - parseptr);
+//                    bufend = bufend - desloc;
+//                    parseptr = buf;
+//                }
                 // Or else, reset bufend and parseptr if buffer is full.
-                else if (bufend >= buf + sizeof(buf)) {
+                if (bufend >= buf + sizeof(buf) - 100) {
+                    ROS_INFO("Buffer got full. Clearing buffer.");
                     bufend = buf;
                     parseptr = buf;
                 }
@@ -216,6 +252,7 @@ int main(int argc, char **argv) {
                         sensor_msgs::Imu imu_msg;
                         init_imu_msg(&imu_msg, &record);
                         publisher.publish(imu_msg);
+                        print_rec(&record);
                     }
                     else {
                         ROS_INFO("Error parsing received pack.");

@@ -1,28 +1,39 @@
-clear variables
-close all
-clc
+delete(instrfind);
+clear all;
+close all;
+clc;
 
-portOpen = 0;
-serialPort = '/dev/ttyUSB0';
-[serialLink, err] = i3dmgx2_OpenPort(serialPort);
+SampleRate = 1;
+PortOpen = 0;
+warning on backtrace
+warning on verbose
 
-if err == 0
-    err = setCommTimeouts(seralLink, 2.0);
-    if err == 0
-        error('Error opening serial port')
+ComNum = '/dev/ttyUSB0';
+
+[SerialLink,Error] = i3dmgx2_OpenPort(ComNum);
+if Error == 0
+    Error = setCommTimeouts(SerialLink,1/SampleRate+.1);
+    if Error == 0
+        PortOpen = 1;
     end
 end
 
-i = 1;
-numPacks = 1000;
-packs = cell(1, numPacks);
-elapsed = zeros(1, numPacks);
-
-while i <= numPacks
-    tic
-    [packs{i}, err] = i3dmgx2_AccAngrMagOr(SerialLink);
-    elapsed(i,:) = toc;
-    if err == 0
-        i = i + 1;
+if PortOpen == 1 
+    i = 1;
+    numPacks = 300;
+    packSize = 77;
+    packs = zeros(packSize, numPacks);
+    elapsed = zeros(1, numPacks);
+    
+    while i <= numPacks
+        tic
+        [pack, Error] = i3dmgx2_AccAngrMagOr(SerialLink);
+        elapsed(i) = toc;
+        if (Error == 0 && length(pack) == packSize)
+            packs(:,i) = pack;
+            i = i + 1;
+        end
     end
 end
+
+closePort(ComNum);
