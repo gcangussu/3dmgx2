@@ -1,8 +1,7 @@
 /*
- * i3dmgx2_io_test.c
+ * Test for the i3dmgx2_io.h
  *
  *  Created on: 24 de out de 2016
- *      Author: gabriel
  */
 
 #include <stdlib.h>

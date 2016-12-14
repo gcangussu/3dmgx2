@@ -1,8 +1,7 @@
 /*
- * i3dmgx2_protocol.h
+ * Define macros and funtions for the 3DM-GX2 protocol.
  *
  *  Created on: 18 de set de 2016
- *      Author: gabriel
  */
 
 #ifndef I3DMGX2_PROTOCOL_H_

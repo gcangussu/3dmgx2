@@ -1,8 +1,7 @@
 /*
- * i3dmgx2_protocol.c
+ * Implement the core functions to the 3DM-GX2 protocol.
  *
  *  Created on: 25 de set de 2016
- *      Author: gabriel
  */
 
 #ifdef __cplusplus
@@ -530,13 +529,3 @@ const uint8_t i3dmgx2_data_start[3] = {0xAA, 0x07, 0x00};
 #ifdef __cplusplus
 }
 #endif
-
-
-
-
-
-
-
-
-
-

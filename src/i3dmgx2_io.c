@@ -1,8 +1,7 @@
 /*
- * i3dmgx2_io.c
+ * Implement functions to facilitate interfacing with the 3DM-GX2.
  *
  *  Created on: 7 de out de 2016
- *      Author: gabriel
  */
 
 #ifdef __cplusplus

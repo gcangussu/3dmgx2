@@ -1,8 +1,7 @@
 /*
- * i3dmgx2_node.cpp
+ * Node implementation for the use of a 3DM-GX2 with ROS.
  *
  *  Created on: Nov 7, 2016
- *      Author: Gabriel Mesquita Cangussu (gabrielcangussu@gmail.com)
  */
 
 #include <stdlib.h>
@@ -22,7 +21,8 @@
 
 
 /*
- * Print acc_angr_magv_orient record on stdout
+ * Print acc_angr_magv_orient record on stdout.
+ * For debug purposes only.
  */
 void print_rec(acc_angr_magv_orient *record) {
     printf("\n%f;", record->acc[0]);
@@ -47,7 +47,9 @@ void print_rec(acc_angr_magv_orient *record) {
 
 /*
  * Convert a rotation matrix to a quaternion.
- * Based on "Converting a Rotation Matrix to a Quaternion" by Mike Day.
+ * This uses the Shepperd algorithm to make the conversion. The choice of the
+ * best indices permutation to use is credited to Mike Day on "Converting a
+ * Rotation Matrix to a Quaternion".
  * (https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf)
  */
 void rotmatrix_to_quaternion(float m[3][3],
@@ -138,12 +140,73 @@ int main(int argc, char **argv) {
             "imu/data_raw",
             1000);
 
+    if (argc < 3) {
+        ROS_INFO("Incorrect use.\n"
+                 "Usage: rosrun i3dmgx2 i3dmgx2_node PORT ADDRESS [DIVIDER]\n");
+        exit(1);
+    }
+
     // Open serial port to 3DM-GX2 base station.
-    int fd = i3dmgx2_open_port("/dev/ttyUSB0");  // TODO: put argument for port
+    int fd = i3dmgx2_open_port(argv[1]);
     if (fd < 0) {
         ROS_INFO("Error trying to open serial port.");
         perror("Error trying to open serial port");
         exit(1);
+    }
+
+    if (argc > 3) {
+        /* If provided, set the IMU's divider constant to configure the data
+         * output rate (see section "Calculation Cycle, and Data Output Rate"
+         * in the protocol specification document, page 29). */
+        int divider = atoi(argv[3]);
+        if (divider >= 170 && divider <= 51200) {
+            // Send pack to configure data output rate
+            ROS_INFO("Setting IMU divider constant to %d\n", divider);
+            const unsigned ww_size = I3DMGX2_CMDP_SIZE(SIZE_WRITE_WORD_EEPROM);
+            uint8_t ww_pack[ww_size];
+            init_write_word_eeprom(I3DMGX2_PAYLOAD_PTR(ww_pack),
+                                   0xFCA2, (u_int16_t) divider);
+            i3dmgx2_init_cmdp(ww_pack, atoi(argv[2]), SIZE_WRITE_WORD_EEPROM);
+
+            ssize_t nbytes = write(fd, ww_pack, ww_size);
+            if (nbytes < 0) {
+                ROS_INFO("Error writing to serial port.");
+                perror("Error writing to serial port");
+                exit(1);
+            }
+            else if (nbytes != ww_size) {
+                ROS_INFO("Error: parcial write on serial port.");
+                exit(1);
+            }
+
+            usleep(100000);
+        }
+        else {
+            ROS_INFO("Divider provided is out of range [170 51200]\n");
+        }
+    }
+
+    /* There is a weird bug where the continuous mode doesn't work properly
+     * when it is requested as the first command. The solution found was to
+     * make some requests before setting the continuous mode. */
+    for (int i = 0; i < 3; ++i) {
+        const unsigned aa_size = I3DMGX2_CMDP_SIZE(SIZE_ACC_ANGR);
+        uint8_t aa_pack[aa_size];
+        aa_pack[I3DMGX2_PAYLOAD_INDEX] = CMD_ACC_ANGR;
+        i3dmgx2_init_cmdp(aa_pack, atoi(argv[2]), SIZE_ACC_ANGR);
+
+        ssize_t nbytes = write(fd, aa_pack, aa_size);
+        if (nbytes < 0) {
+            ROS_INFO("Error writing to serial port.");
+            perror("Error writing to serial port");
+            exit(1);
+        }
+        else if (nbytes != aa_size) {
+            ROS_INFO("Error: parcial write on serial port.");
+            exit(1);
+        }
+
+        usleep(100000);
     }
 
     // Send pack to 3DM-GX2 with set continuous command.
@@ -151,13 +214,7 @@ int main(int argc, char **argv) {
     uint8_t sc_pack[sc_size];
     init_set_continuous_mode(I3DMGX2_PAYLOAD_PTR(sc_pack),
                              CMD_ACC_ANGR_MAGV_ORIENT);
-    i3dmgx2_init_cmdp(sc_pack, 95, SIZE_SET_CONTINUOUS);  // TODO: change 95 to argument
-
-//    // Send pack to configure data output rate
-//    const unsigned sc_size = I3DMGX2_CMDP_SIZE(SIZE_WRITE_WORD_EEPROM);
-//    uint8_t sc_pack[sc_size];
-//    init_write_word_eeprom(I3DMGX2_PAYLOAD_PTR(sc_pack), 0xFCA2, 4267);
-//    i3dmgx2_init_cmdp(sc_pack, 95, SIZE_WRITE_WORD_EEPROM);
+    i3dmgx2_init_cmdp(sc_pack, atoi(argv[2]), SIZE_SET_CONTINUOUS);
 
     ssize_t nbytes = write(fd, sc_pack, sc_size);
     if (nbytes < 0) {
@@ -171,7 +228,6 @@ int main(int argc, char **argv) {
     }
 
     uint8_t buf[4095];
-    //uint8_t buf[] = {0xAA, 0x00, 0x00, 0x00, 0x5F, 0x03, 0x12, 0x09, 0x6D, 0x19, 0xC7, 0xAA, 0xAA, 0x07, 0x00, 0x00, 0x5F, 0x07, 0x00, 0xC4, 0xCC, 0x5E, 0xD6, 0xAE, 0xB9, 0x26, 0xD4, 0x04, 0x98, 0xAA, 0x07, 0x00, 0x00, 0x5F, 0x4E, 0xAA, 0x07, 0x00, 0x7B, 0xD4, 0xDA, 0x3D, 0x17, 0xC3, 0xDD, 0xBD, 0x99, 0x7C, 0x3D, 0xBC, 0x0A, 0x2F, 0xFC, 0xBC, 0xD0, 0x94, 0xA6, 0xBB, 0xB4, 0x7D, 0x59, 0xFF, 0xC0, 0x00, 0x00, 0xFF, 0xC0, 0x00, 0x00, 0xFF, 0xC0, 0x00, 0x00, 0x3E, 0x82, 0x1E, 0x21, 0x3E, 0x07, 0x05, 0x00, 0xBF, 0x75, 0x48, 0x8E, 0xBF, 0x30, 0xCE, 0x22, 0x3F, 0x37, 0xDF, 0xCB, 0xBD, 0xAC, 0xBB, 0xD6, 0x3F, 0x2D, 0x54, 0x77, 0x3F, 0x2E, 0xE4, 0x04, 0x3E, 0x8C, 0x15, 0x5D, 0x4E, 0xD9, 0xAE, 0xB9, 0x27, 0xD5, 0x24, 0xC6, 0xAA, 0x07, 0x00, 0x00, 0x5F, 0x4E, 0x00, 0xCC, 0x3F, 0x7B, 0xF4, 0x56, 0x3D, 0x15, 0x72, 0x3B, 0xBD, 0x9A, 0xCA, 0xB0, 0xBC, 0x15, 0xF6, 0xAC, 0xBC, 0xE9, 0xB0, 0x5A, 0xBB, 0xDB, 0x5D, 0xB1, 0xFF, 0xC0, 0x00, 0x00, 0xFF, 0xC0, 0x00, 0x00, 0xFF, 0xC0, 0x00, 0x00, 0x3E, 0x82, 0x26, 0xF1, 0x3E, 0x07, 0x10, 0x64, 0xBF, 0x75, 0x46, 0xFF, 0xBF, 0x30, 0xD2, 0x14, 0x3F, 0x37, 0xDB, 0xAD, 0xBD, 0xAC, 0xD2, 0x2C, 0x3F, 0x2D, 0x4E, 0xCB, 0x3F, 0x2E, 0xE7, 0xE6, 0x3E, 0x8C, 0x1E, 0x92, 0x5E, 0xDC, 0xAE, 0xB9, 0x26, 0xD4, 0x27, 0x74, 0xAA, 0x07, 0x00, 0x00, 0x5F, 0x4E, 0x00, 0xCC, 0x3F, 0x7C, 0x0E, 0xD3, 0x3D, 0x15, 0x2C, 0x4C, 0xBD, 0x9A, 0x53, 0x4E, 0xBB, 0xAD, 0xD1, 0x29, 0xBC, 0xC1, 0xBC, 0xE5, 0xBB, 0xCB, 0x72, 0x18, 0xFF, 0xC0, 0x00, 0x00, 0xFF, 0xC0, 0x00, 0x00, 0xFF, 0xC0, 0x00, 0x00, 0x3E, 0x82, 0x2A, 0xF1, 0x3E, 0x07};
     uint8_t *bufend = buf;
     uint8_t *parseptr = buf;
     uint8_t *pack;
@@ -179,11 +235,7 @@ int main(int argc, char **argv) {
     int parse_result;
     acc_angr_magv_orient record;
 
-//    unsigned i = 0;
-
     while (ros::ok()) {
-//        ++i;
-
         // Read from serial port.
         nbytes = read(fd, bufend, sizeof(buf) - (bufend - buf));
 
@@ -203,10 +255,6 @@ int main(int argc, char **argv) {
         // Move bufend by nbytes (read from serial port).
         bufend += nbytes;
 
-//        if (i % 100 == 0) {
-//            ROS_INFO("Left space in buffer: %lu", sizeof(buf) - (bufend - buf));
-//        }
-
         // Parse buffer searching for received packs.
         while (true) {
             parse_result = i3dmgx2_parse_buffer(parseptr,
@@ -216,17 +264,7 @@ int main(int argc, char **argv) {
 
             // In case of pack not found.
             if (parse_result != 0) {
-//                const size_t desloc = parseptr - buf;
-//                const size_t buf_left = sizeof(buf) - desloc;
-//
-//                // Clear unused buffer if space left is smaller than 100 bytes.
-//                if (buf_left < 100) {
-//                    ROS_INFO("Buffer got almost full. Clearing unused buffer.");
-//                    memcpy(buf, parseptr, bufend - parseptr);
-//                    bufend = bufend - desloc;
-//                    parseptr = buf;
-//                }
-                // Or else, reset bufend and parseptr if buffer is full.
+                // Reset bufend and parseptr if buffer is full.
                 if (bufend >= buf + sizeof(buf) - 100) {
                     ROS_INFO("Buffer got full. Clearing buffer.");
                     bufend = buf;
@@ -238,7 +276,9 @@ int main(int argc, char **argv) {
             // Treat pack based on its command.
             switch (I3DMGX2_CMD(pack)) {
                 case CMD_SET_CONTINUOUS:
-                    // Ignore set continuous reply.
+                case CMD_ACC_ANGR:
+                case CMD_WRITE_WORD_EEPROM:
+                    // Ignore these replies.
                     break;
 
                 case CMD_ACC_ANGR_MAGV_ORIENT:
@@ -252,7 +292,6 @@ int main(int argc, char **argv) {
                         sensor_msgs::Imu imu_msg;
                         init_imu_msg(&imu_msg, &record);
                         publisher.publish(imu_msg);
-                        print_rec(&record);
                     }
                     else {
                         ROS_INFO("Error parsing received pack.");

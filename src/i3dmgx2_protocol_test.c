@@ -1,11 +1,5 @@
 /*
- ============================================================================
- Name        : i3dmgx2_protocol_test.c
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description :
- ============================================================================
+ * Test some of the main functions and macros of the 3DM-GX2 protocol.
  */
 
 #include <stdio.h>

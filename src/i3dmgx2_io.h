@@ -1,8 +1,7 @@
 /*
- * i3dmgx2_io.h
+ * Define functions to facilitate interfacing with the 3DM-GX2.
  *
  *  Created on: 7 de out de 2016
- *      Author: gabriel
  */
 
 #ifndef I3DMGX2_IO_H_

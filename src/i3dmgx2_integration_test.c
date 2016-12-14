@@ -1,8 +1,7 @@
 /*
- * i3dmgx2_integration_test.c
+ * Test for the Unix API use with the 3DM-GX2 library.
  *
  *  Created on: 7 de out de 2016
- *      Author: gabriel
  */
 
 #include <stdio.h>

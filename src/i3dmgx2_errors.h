@@ -2,7 +2,6 @@
  * i3dmgx2_errors.h
  *
  *  Created on: 25 de set de 2016
- *      Author: gabriel
  */
 
 #ifndef I3DMGX2_ERRORS_H_

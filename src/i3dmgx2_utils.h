@@ -1,8 +1,7 @@
 /*
- * i3dmgx2_utils.h
+ * Definition of useful functions for the 3DM-GX2 library.
  *
  *  Created on: 25 de set de 2016
- *      Author: gabriel
  */
 
 #ifndef I3DMGX2_UTILS_H_
